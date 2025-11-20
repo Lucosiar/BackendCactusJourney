@@ -1,0 +1,74 @@
+// ---------------------------------------------------------
+// DATASOURCE & GENERATOR
+// ---------------------------------------------------------
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------
+// MODELOS
+// ---------------------------------------------------------
+
+// ---------------- USER ----------------
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+
+  // Relaciones
+  cactus       Cactus[]
+  refreshTokens RefreshToken[]
+}
+
+// ----------- REFRESH TOKENS -----------
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     Int
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------- CACTUS ----------------
+model Cactus {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+
+  name        String?
+  photoUrl    String?
+  region      String?
+  interior    Boolean?   // true = interior, false = exterior
+  type        String?
+  size        String?
+
+  avgTemp     Int?
+  avgHumidity Int?
+
+  wateringFrequencyDays Int?
+  lastWateredAt         DateTime?
+  nextWaterAt           DateTime?
+
+  createdAt   DateTime @default(now())
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history     CactusHistory[]
+}
+
+// ----------- CACTUS HISTORY ------------
+model CactusHistory {
+  id        Int      @id @default(autoincrement())
+  cactusId  Int
+  photoUrl  String?
+  comment   String?
+  createdAt DateTime @default(now())
+
+  cactus    Cactus   @relation(fields: [cactusId], references: [id], onDelete: Cascade)
+}
